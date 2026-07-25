@@ -1,0 +1,11 @@
+{
+    "folders": [
+		{
+			"path": "TX STM32"
+		},
+		{
+			"name": "RX STM32",
+			"path": "RX STM32"
+		}
+	]
+}
