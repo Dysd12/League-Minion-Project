@@ -4,24 +4,31 @@
 #include <stdbool.h>
 #include "delay.h"
 #include "gpio.h"
+#include "motors.h"
 #include "nrf.h"
 #include "spi.h"
+#include "timer.h"
 #include "usart.h"
 
 
 int main() {
-    uint8_t ADDRESS[5] = {0xEE, 0xDD, 0xCC, 0xBB, 0xAA}; // LSB written first
-    uint8_t CHANNEL = 10;
+    uint8_t address[5] = {0xEE, 0xDD, 0xCC, 0xBB, 0xAA}; // LSB written first
+    uint8_t channel = 10;
     uint8_t rx_data[2] = {0};
+    int motor_data[2] = {0};
 
     host_serial_init();
     delay_init();
     spi_init();
-	nRF24_init(ADDRESS, CHANNEL, 0);
+	nRF24_init(address, channel, 0);
+    TIM1_init(1000); // 1 kHz PWM frequency
 
     while(1) {
         if(nRF24_receive(rx_data)) {
-            printf("Received Data: (%d, %d)\n", (rx_data[0] - 120), -(rx_data[1] - 120));
+            motor_data[0] =   rx_data[0] - 120;
+            motor_data[1] = -(rx_data[1] - 120);
+            printf("Received Data: (%d, %d)\n", motor_data[0], motor_data[1]);
+            set_motor_pwm(motor_data[0], motor_data[1]);
         }
         delay_ms(100);
     }

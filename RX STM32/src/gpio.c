@@ -1,44 +1,43 @@
 #include "gpio.h"
 
 /* Mapping of an STM32_Pin to its GPIO port */ 
-GPIO_TypeDef* g_GPIO_port[D13+1] = {
-    GPIOA,GPIOA,GPIOA,GPIOA,  // A0=PA0,A1=PA1,A2=PA3,A3=PA4
-    GPIOA,GPIOA,GPIOA,GPIOA,  // A4=PA5,A5=PA6,A6=PA7,A7=PA2
-    GPIOA,GPIOA,GPIOA,GPIOB,  // D0=PA10,D1=PA9,D2=PA12,D3=PB0
-    GPIOB,GPIOB,GPIOB,GPIOC,  // D4=PB7,D5=PB6,D6=PB1,D7=PC14
-    GPIOC,GPIOA,GPIOA,GPIOB,  // D8=PC15,D9=PA8,D10=PA11,D11=PB5
-    GPIOB,GPIOB               // D12=PB4,D13=PB3.
-};
 
-// Mapping of an STM32_Pin to its GPIO pin 
-uint8_t g_GPIO_pin[D13+1] = {
-    0,1,3,4,    // A0=PA0,A1=PA1,A2=PA3,A3=PA4
-    5,6,7,2,    // A4=PA5,A5=PA6,A6=PA7,A7=PA2
-    10,9,12,0,  // D0=PA10,D1=PA9,D2=PA12,D3=PB0
-    7,6,1,14,   // D4=PB7,D5=PB6,D6=PB1,D7=PC14
-    15,8,11,5,  // D8=PC15,D9=PA8,D10=PA11,D11=PB5
-    4,3         // D12=PB4,D13=PB3.
+static const GPIO_TypeDef *get_GPIO_port[24] = {
+    GPIOA, GPIOA, GPIOA, GPIOA,  // PA0,  PA1,  PA2,  PA3,
+    GPIOA, GPIOA, GPIOA, GPIOA,  // PA4,  PA5,  PA6,  PA7,
+    GPIOA, GPIOA, GPIOA, GPIOA,  // PA8,  PA9,  PA10, PA11,
+    GPIOA, GPIOA, GPIOA, GPIOA,  // PA12, PA13, PA14, PA15,
+    GPIOB, GPIOB, GPIOB, GPIOB,  // PB0,  PB1,  PB2,  PB3,
+    GPIOB, GPIOB, GPIOB, GPIOB   // PB4,  PB5,  PB6,  PB7
+};
+    
+static const int get_GPIO_pin[24] = {
+    0,  1,  2,  3,  // PA0,  PA1,  PA2,  PA3,
+    4,  5,  6,  7,  // PA4,  PA5,  PA6,  PA7,
+    8,  9,  10, 11, // PA8,  PA9,  PA10, PA11,
+    12, 13, 14, 15, // PA12, PA13, PA14, PA15,
+    0,  1,  2,  3,  // PB0,  PB1,  PB2,  PB3,
+    4,  5,  6,  7   // PB4,  PB5,  PB6,  PB7
 };
 
 // Enables a GPIO port (A, B, C, or H) by setting the appropriate bit in the RCC
 // clock enable register.
 //   gpio: Pointer to GPIO port to enable, one of GPIOA, GPIOB, GPIOC, GPIOH
-static void gpio_enable_port(GPIO_TypeDef *port) {
-    if      (port == GPIOA) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-    else if (port == GPIOB) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-    else if (port == GPIOC) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
-    else                    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOHEN;
+static void gpio_enable_port(GPIO_TypeDef *GPIOx) {
+    if      (GPIOx == GPIOA) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    else if (GPIOx == GPIOB) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    else if (GPIOx == GPIOC) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+    else if (GPIOx == GPIOH) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOHEN;
 }
-
 
 // Configure the direction for a given GPIO pin
 //   pin: A Nucleo pin ID (D2, A4, etc.)
 //   direction: One of INPUT (0b00) or OUTPUT (0b01).  Other modes are invalid.
 // Returns void_INVALID_CONFIG for invalid direction value, otherwise
 // returns void_OK.
-void gpio_config_mode(STM32_Pin pin, unsigned int mode) {
-    GPIO_TypeDef *port = g_GPIO_port[pin];
-    uint8_t pin_offset = g_GPIO_pin[pin];
+void gpio_config_mode(Nucleo_pin pin, unsigned int mode) {
+    GPIO_TypeDef *port = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
 
     gpio_enable_port(port);
 
@@ -54,9 +53,9 @@ void gpio_config_mode(STM32_Pin pin, unsigned int mode) {
 //         modes are invalid.
 // Returns void_INVALID_CONFIG for invalid pullup mode value, otherwise
 // returns void_OK.
-void gpio_config_pullup(STM32_Pin pin, unsigned int mode) {
-    GPIO_TypeDef* port = g_GPIO_port[pin];
-    uint8_t pin_offset = g_GPIO_pin[pin];
+void gpio_config_pullup(Nucleo_pin pin, unsigned int mode) {
+    GPIO_TypeDef* port = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
 
     // if(mode & ~0b11UL){ // Only bottom two bits are are valid
     //     return void_INVALID_CONFIG;
@@ -72,9 +71,9 @@ void gpio_config_pullup(STM32_Pin pin, unsigned int mode) {
 //   function: an integer 0-15 to select the alternate function
 // Always returns void_OK; in the future this may return errors for
 // invalid configurations.
-void gpio_config_alternate_function(STM32_Pin pin, unsigned int function) {
-    GPIO_TypeDef* port = g_GPIO_port[pin];
-    uint8_t pin_offset = g_GPIO_pin[pin];
+void gpio_config_alternate_function(Nucleo_pin pin, unsigned int function) {
+    GPIO_TypeDef* port = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
 
     unsigned int afr_offset = pin_offset * 4; // 4 bits per pin
     // keep it to AFR[0] or AFR[1], and each is 32-bits wide. So pin offset is at
@@ -86,9 +85,9 @@ void gpio_config_alternate_function(STM32_Pin pin, unsigned int function) {
 // Set the value of a single GPIO output pin.
 //   pin: A Nucleo pin ID (D2, A4, etc.)
 //   value: Boolean 0 or 1 to send to the pin
-void gpio_write(STM32_Pin pin, bool value) {
-    GPIO_TypeDef* port = g_GPIO_port[pin];
-    uint8_t pin_offset = g_GPIO_pin[pin];
+void gpio_write(Nucleo_pin pin, bool value) {
+    GPIO_TypeDef* port = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
 
     if(value){
       port->BSRR = 1 << pin_offset;
@@ -101,9 +100,9 @@ void gpio_write(STM32_Pin pin, bool value) {
 // configured as an input.
 //   pin: A Nucleo pin ID (D2, A4, etc.)
 // Returns a boolean, indicating the value (0/low or 1/high) of the pin
-bool gpio_read(STM32_Pin pin) {
-    GPIO_TypeDef* port = g_GPIO_port[pin];
-    uint8_t pin_offset = g_GPIO_pin[pin];
+bool gpio_read(Nucleo_pin pin) {
+    GPIO_TypeDef* port = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
 
     return (port->IDR >> pin_offset) & 1UL;
 }

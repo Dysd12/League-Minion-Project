@@ -62,7 +62,6 @@ void spi1_transmit(const uint8_t *data, unsigned int size) {
         while(!(SPI1->SR & SPI_SR_TXE));
         /* 2. Write byte to the SPI's TX FIFO. */
         *(__IO uint8_t *)&SPI1->DR = data[i];
-        //TXE flag is direct consequence of writing to DR thus delay not required.
         delay_ms(1);
     }
 }

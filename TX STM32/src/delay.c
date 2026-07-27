@@ -21,8 +21,9 @@ void delay_init() {
 }
 
 void delay_ms(uint32_t time){
+	SysTick->VAL = 0; // Clear current value register
 	uint64_t start = millis();
-	while((millis() - start) < time) {}
+	while((millis() - start) < time);
 }
 
 volatile uint64_t mil;
