@@ -20,90 +20,89 @@ static const int get_GPIO_pin[24] = {
     4,  5,  6,  7   // PB4,  PB5,  PB6,  PB7
 };
 
-// Enables a GPIO port (A, B, C, or H) by setting the appropriate bit in the RCC
-// clock enable register.
-//   gpio: Pointer to GPIO port to enable, one of GPIOA, GPIOB, GPIOC, GPIOH
-static void gpio_enable_port(GPIO_TypeDef *GPIOx) {
+static void GPIO_enable_port(GPIO_TypeDef *GPIOx) {
     if      (GPIOx == GPIOA) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
     else if (GPIOx == GPIOB) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
     else if (GPIOx == GPIOC) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
     else if (GPIOx == GPIOH) RCC->AHB2ENR |= RCC_AHB2ENR_GPIOHEN;
 }
 
-// Configure the direction for a given GPIO pin
-//   pin: A Nucleo pin ID (D2, A4, etc.)
-//   direction: One of INPUT (0b00) or OUTPUT (0b01).  Other modes are invalid.
-// Returns void_INVALID_CONFIG for invalid direction value, otherwise
-// returns void_OK.
-void gpio_config_mode(Nucleo_pin pin, unsigned int mode) {
-    GPIO_TypeDef *port = get_GPIO_port[pin];
+
+/**
+ * @brief Configure a GPIO pin as an output.
+ * @param pin The Nucleo pin to configure.
+ * @param otype The output type (0 for push-pull, 1 for open-drain)
+ * @param ospeed The output speed (0 for low, 1 for medium, 2 for high, 3 for very high)
+ */
+void GPIO_config_output(Nucleo_pin pin, uint8_t otype, uint8_t ospeed) {
+    GPIO_TypeDef *GPIOx = get_GPIO_port[pin];
     int pin_offset = get_GPIO_pin[pin];
 
-    gpio_enable_port(port);
+    GPIO_enable_port(GPIOx);
 
-    port->MODER &= ~(0b11 << pin_offset*2); // Clear both mode bits
-    port->MODER |=  (mode << pin_offset*2);
+    GPIOx->MODER &= ~(0x03 << pin_offset * 2); // Clear both mode bits
+    GPIOx->MODER |=  (0x01 << pin_offset * 2);
+
+    GPIOx->OTYPER &= ~(0x01 << pin_offset); // Clear output type bit
+    GPIOx->OTYPER |=  (otype << pin_offset); // Set
+
+    GPIOx->OSPEEDR &= ~(0x03 << pin_offset * 2); // Clear both speed bits
+    GPIOx->OSPEEDR |=  (ospeed << pin_offset * 2);
 }
 
-// Configure the pullup mode for a given GPIO pin.  This is only meaningful when
-// the pin is configured as an input, but it will set the registers regardless
-// of mode.
-//   pin: A Nucleo pin ID (D2, A4, etc.)
-//   mode: One of PULL_OFF (0b00), PULL_UP (0b01) or PULL_DOWN (0b10).  Other
-//         modes are invalid.
-// Returns void_INVALID_CONFIG for invalid pullup mode value, otherwise
-// returns void_OK.
-void gpio_config_pullup(Nucleo_pin pin, unsigned int mode) {
-    GPIO_TypeDef* port = get_GPIO_port[pin];
+/**
+ * @brief Configure a GPIO pin as an input.
+ * @param pin The Nucleo pin to configure.
+ * @param pupd The pull-up/pull-down configuration (0 for no pull, 1 for pull-up, 2 for pull-down)
+ */
+void GPIO_config_input(Nucleo_pin pin, uint8_t pupd) {
+    GPIO_TypeDef *GPIOx = get_GPIO_port[pin];
     int pin_offset = get_GPIO_pin[pin];
 
-    // if(mode & ~0b11UL){ // Only bottom two bits are are valid
-    //     return void_INVALID_CONFIG;
-    // }
-    port->PUPDR &= ~(0b11 << pin_offset*2); // Clear both mode bits
-    port->PUPDR |=  (mode << pin_offset*2);
+    GPIO_enable_port(GPIOx);
+
+    GPIOx->MODER &= ~(0x03 << pin_offset * 2); // Clear both mode bits
+
+    GPIOx->PUPDR &= ~(0x03 << pin_offset * 2); // Clear both pull-up/pull-down bits
+    GPIOx->PUPDR |=  (pupd << pin_offset * 2); // Set pull-up/pull-down
 }
 
-// Configure a GPIO pin for one of its "alternate functions".  See Tables 15 and
-// 16 of the STM32L432KC datasheet for a complete listing of the alternate
-// functions for each pin.
-//   pin: A Nucleo pin ID (D2, A4, etc.)
-//   function: an integer 0-15 to select the alternate function
-// Always returns void_OK; in the future this may return errors for
-// invalid configurations.
-void gpio_config_alternate_function(Nucleo_pin pin, unsigned int function) {
-    GPIO_TypeDef* port = get_GPIO_port[pin];
+
+void GPIO_config_alternate_function(Nucleo_pin pin, uint8_t func) {
+    GPIO_TypeDef* GPIOx = get_GPIO_port[pin];
     int pin_offset = get_GPIO_pin[pin];
 
-    unsigned int afr_offset = pin_offset * 4; // 4 bits per pin
-    // keep it to AFR[0] or AFR[1], and each is 32-bits wide. So pin offset is at
-    // most 7 (0-7 = 8 pins) 
-    port->AFR[afr_offset >> 5] &= ~(0b1111 << (0b11111 & afr_offset));
-    port->AFR[afr_offset >> 5] |=  (function << (0b11111 & afr_offset));
-}
+    GPIO_enable_port(GPIOx);
+    
+    GPIOx->MODER &= ~(0x03 << (pin_offset * 2)); // Clear both mode bits
+    GPIOx->MODER |=  (0x02 << (pin_offset * 2)); // Set to alternate function mode
 
-// Set the value of a single GPIO output pin.
-//   pin: A Nucleo pin ID (D2, A4, etc.)
-//   value: Boolean 0 or 1 to send to the pin
-void gpio_write(Nucleo_pin pin, bool value) {
-    GPIO_TypeDef* port = get_GPIO_port[pin];
-    int pin_offset = get_GPIO_pin[pin];
-
-    if(value){
-      port->BSRR = 1 << pin_offset;
-    } else{
-      port->BRR = 1 << pin_offset; 
+    if (pin_offset < 8) {
+        GPIOx->AFR[0] &= ~(0x0F << pin_offset * 4);
+        GPIOx->AFR[0] |=  (func << pin_offset * 4);
+    } else {
+        GPIOx->AFR[1] &= ~(0x0F << (pin_offset - 8) * 4);
+        GPIOx->AFR[1] |=  (func << (pin_offset - 8) * 4);
     }
 }
 
-// Read the value of a single GPIO pin.  This is only meaningful if the pin is
-// configured as an input.
-//   pin: A Nucleo pin ID (D2, A4, etc.)
-// Returns a boolean, indicating the value (0/low or 1/high) of the pin
-bool gpio_read(Nucleo_pin pin) {
-    GPIO_TypeDef* port = get_GPIO_port[pin];
+
+void GPIO_write(Nucleo_pin pin, bool value) {
+    GPIO_TypeDef* GPIOx = get_GPIO_port[pin];
     int pin_offset = get_GPIO_pin[pin];
 
-    return (port->IDR >> pin_offset) & 1UL;
+    if(value){
+      GPIOx->BSRR = 1 << pin_offset;
+    } else{
+      GPIOx->BRR = 1 << pin_offset; 
+    }
+}
+
+
+bool GPIO_read(Nucleo_pin pin) {
+    GPIO_TypeDef* GPIOx = get_GPIO_port[pin];
+    int pin_offset = get_GPIO_pin[pin];
+
+    return GPIOx->IDR & (1U << pin_offset);
 }
 

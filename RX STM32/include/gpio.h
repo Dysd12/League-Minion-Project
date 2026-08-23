@@ -25,12 +25,11 @@ typedef enum {
 #define PULL_UP 0b01
 #define PULL_DOWN 0b10
 
-
-void gpio_config_mode(Nucleo_pin pin, unsigned int mode);
-void gpio_config_pullup(Nucleo_pin pin, unsigned int mode);
-void gpio_config_alternate_function(Nucleo_pin pin, unsigned int function);
-void gpio_write(Nucleo_pin pin, bool value);
-bool gpio_read(Nucleo_pin pin);
+void GPIO_config_output(Nucleo_pin pin, uint8_t otype, uint8_t ospeed);
+void GPIO_config_input(Nucleo_pin pin, uint8_t pupd);
+void GPIO_config_alternate_function(Nucleo_pin pin, uint8_t func);
+bool GPIO_read(Nucleo_pin pin);
+void GPIO_write(Nucleo_pin pin, bool value);
 
 
 #endif

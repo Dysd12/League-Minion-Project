@@ -41,7 +41,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
         return false;
     }
     // Configure the CCMRx and CCER registers for the specified channel
-    if       (channel == 1) {
+    if (channel == 1) {
         // OC1Ref is not affected by some signal?
         TIM1->CCMR1 &= ~TIM_CCMR1_OC1CE; 
         // PWM Mode 1: OC1Ref is active as long as TIMx_CNT < TIMx_CCR1
@@ -63,7 +63,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
         // Compare mode enabled for channel 1
         TIM1->CCER |=  TIM_CCER_CC1E;
 
-    } else if(channel == 2) {
+    } else if (channel == 2) {
         TIM1->CCMR1 &= ~(TIM_CCMR1_OC2CE); // OC2Ref is not affected by some signal?
 
         TIM1->CCMR1 &= ~(TIM_CCMR1_OC2M);
@@ -76,7 +76,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
 
         TIM1->CCMR1 &= ~(TIM_CCMR1_CC2S);
         
-    } else if(channel == 3) {
+    } else if (channel == 3) {
         TIM1->CCMR2 &= ~(TIM_CCMR2_OC3CE); // OC3Ref is not affected by some signal?
 
         TIM1->CCMR2 &= ~(TIM_CCMR2_OC3M);
@@ -89,7 +89,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
 
         TIM1->CCMR2 &= ~(TIM_CCMR2_CC3S);
 
-    } else if(channel == 4) {
+    } else if (channel == 4) {
         TIM1->CCMR2 &= ~(TIM_CCMR2_OC4CE); // OC4Ref is not affected by some signal?
 
         TIM1->CCMR2 &= ~(TIM_CCMR2_OC4M);
@@ -126,7 +126,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
     else if (channel == 3) TIM1->CCR3 = ccr_val;
     else if (channel == 4) TIM1->CCR4 = ccr_val;
 
-    gpio_config_alternate_function(pin, 1);
+    GPIO_config_alternate_function(pin, 1);
 
     return true;
 }

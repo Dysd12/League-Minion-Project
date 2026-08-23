@@ -8,14 +8,15 @@
 // mapped to 'pin' (which should be of type STM32_Pin). We take advantage of
 // enum being equivalent to int. Note that we don't handle the special ADC
 // internal channels (temperature sensor and voltage reference).
-static int g_ADC_channel[D13+1] = { 
-    5, 6, 8, 9,        // A0=PA0,A1=PA1,A2=PA3,A3=PA4
-    10,11,12, 7,        // A4=PA5,A5=PA6,A6=PA7,A7=PA2
-    -1,-1,-1,15,        // D0=PA10,D1=PA9,D2=PA12,D3=PB0
-    -1,-1,16,-1,        // D4=PB7,D5=PB6,D6=PB1,D7=PC14
-    -1,-1,-1,-1,        // D8=PC15,D9=PA8,D10=PA11,D11=PB5
-    -1,-1            // D12=PB4,D13=PB3.
+static int g_ADC_channel[24] = { 
+    5,  6,  7,  8,  // PA0,  PA1,  PA2,  PA3,
+    9,  10, 11, 12, // PA4,  PA5,  PA6,  PA7,
+    0,  0,  0,  0,  // PA8,  PA9,  PA10, PA11,
+    12, 13, 14, 15, // PA12, PA13, PA14, PA15,
+    15, 16, 0,  0,  // PB0,  PB1,  PB2,  PB3,
+    0,  0,  0,  0   // PB4,  PB5,  PB6,  PB7
 };
+
 
 // Performs initial steps to turn on the ADC: Resets the ADC, takes it out of
 // deep-power-down mode, enables the internal voltage regulator, and waits for
@@ -59,7 +60,7 @@ void adc_init(void) {
 //   pin: A Nucleo pin ID (D2, A4, etc.)
 // Returns STM32_Error_INVALID_CONFIG if the pin is not ADC-capable; otherwise
 // returns STM32_Error_OK.
-void adc_config_single(STM32_Pin pin) {
+void adc_config_single(Nucleo_pin pin) {
     // Map the pin to the ADC channel
     int channel = g_ADC_channel[pin];
     if(channel < 0){
@@ -72,8 +73,8 @@ void adc_config_single(STM32_Pin pin) {
     }
 
     // Configure GPIO pin for analog input
-    gpio_config_mode(pin, ANALOG);
-    gpio_config_pullup(pin, PULL_OFF);
+    GPIO_config_analog(pin);
+    //gpio_config_pullup(pin, PULL_OFF);
 
     // Disable ADC so we can configure settings (Section 16.4.9)
     ADC1->CR &= ~(ADC_CR_ADEN);

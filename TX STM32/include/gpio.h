@@ -4,29 +4,23 @@
 #include <stm32l432xx.h>
 #include <stdbool.h>
 
+// _x means no Nucleo pin exists for the corresponding STM32 pin.
 typedef enum {
-	A0,A1,A2,A3,A4,A5,A6,A7,
-	D0,D1,D2,D3,D4,D5,D6,D7,
-	D8,D9,D10,D11,D12,D13
-} STM32_Pin;
-
-// GPIO modes
-#define INPUT 0b00
-#define OUTPUT 0b01
-#define ALTERNATE_FUNCTION 0b10
-#define ANALOG 0b11
-    
-// GPIO pullup modes
-#define PULL_OFF 0b00
-#define PULL_UP 0b01
-#define PULL_DOWN 0b10
+	A0  = 0,   A1  = 1,   A7 = 2,   A2  = 3,   // PA0,  PA1,  PA2,  PA3,
+	A3  = 4,   A4  = 5,   A5 = 6,   A6  = 7,   // PA4,  PA5,  PA6,  PA7,
+	D9  = 8,   D1  = 9,   D0 = 10,  D10 = 11,  // PA8,  PA9,  PA10, PA11,
+	D2  = 12,  _0  = -1,  _1 = -1,  _2  = -1,  // PA12, PA13, PA14, PA15,
+	D3  = 16,  D6  = 17,  _3 = -1,  D13 = 19,  // PB0,  PB1,  PB2,  PB3,
+	D12 = 20,  D11 = 21,  D5 = 22,  D4  = 23   // PB4,  PB5,  PB6,  PB7
+} Nucleo_pin;
 
 
-void gpio_config_mode(STM32_Pin pin, unsigned int mode);
-void gpio_config_pullup(STM32_Pin pin, unsigned int mode);
-void gpio_config_alternate_function(STM32_Pin pin, unsigned int function);
-void gpio_write(STM32_Pin pin, bool value);
-bool gpio_read(STM32_Pin pin);
+void GPIO_config_output(Nucleo_pin pin, uint8_t otype, uint8_t ospeed);
+void GPIO_config_input(Nucleo_pin pin, uint8_t pupd);
+void GPIO_config_alternate_function(Nucleo_pin pin, uint8_t func);
+void GPIO_config_analog(Nucleo_pin pin);
+bool GPIO_read(Nucleo_pin pin);
+void GPIO_write(Nucleo_pin pin, bool value);
 
 
 #endif

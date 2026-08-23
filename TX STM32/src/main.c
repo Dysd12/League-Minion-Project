@@ -20,7 +20,7 @@ int main() {
 
     host_serial_init();
     delay_init();
-    spi_init();
+    SPI1_init();
 	nRF24_init(tx_address, channel, 1);
     adc_init();
 
@@ -29,10 +29,10 @@ int main() {
         tx_data[0] = adc_read_single();
         adc_config_single(VRY);
         tx_data[1] = adc_read_single();
-        
         if(nRF24_transmit(tx_data)) {
             printf("Transmitted Data: (%d, %d)\n", tx_data[0], tx_data[1]);
         }
+        //printf("Transmitted Data: (%d, %d)\n", tx_data[0], tx_data[1]);
         delay_ms(100);
     }
     return 0;

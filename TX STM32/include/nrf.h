@@ -12,13 +12,17 @@
 #include <stdbool.h>
 #include "gpio.h"
 
-/* Commands */
+// Nucleo pins connected to nRF24L01+ module
+#define nRF24_CE    A0
+#define nRF24_CSN   A1
+
+// Commands
 #define W_TX_PAYLOAD    0xA0
 #define R_RX_PAYLOAD    0x61
 #define FLUSH_TX        0xE1
 #define FLUSH_RX        0xE2
 
-/* Registers */
+// Registers
 #define CONFIG          0x00
 #define EN_AA           0x01
 #define EN_RXADDR       0x02
@@ -46,14 +50,10 @@
 #define DYNPD           0x1C
 #define FEATURE         0x1D
 
-/* Register Bits */
+// Register bits
 #define STATUS_TX_DS   (1U << 5)
 #define STATUS_RX_DR   (1U << 6)
 
-
-/* Pins */
-#define nRF24_CE    A0
-#define nRF24_CSN   A1
 
 /**
  * @brief Configures the nRF24L01 radio settings and sets its operational mode.
