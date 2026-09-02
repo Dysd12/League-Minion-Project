@@ -1,3 +1,7 @@
+/**
+ * Daniel Yeo
+ * 2026/9/1
+ */
 #include <stm32l432xx.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,9 +22,9 @@ int main() {
     uint8_t channel = 10;
     uint8_t tx_data[2];
 
-    host_serial_init();
+    usart2_init(9600);
     delay_init();
-    SPI1_init();
+    spi1_init();
 	nRF24_init(tx_address, channel, 1);
     adc_init();
 
@@ -32,13 +36,29 @@ int main() {
         if(nRF24_transmit(tx_data)) {
             printf("Transmitted Data: (%d, %d)\n", tx_data[0], tx_data[1]);
         }
-        //printf("Transmitted Data: (%d, %d)\n", tx_data[0], tx_data[1]);
         delay_ms(100);
     }
     return 0;
 }
 
+/* Testing*/
+int main() {
+    GPIO_write(D10, 0);
+    uint32_t time = 100*300/7; // Wait for HW to set TXE to 0
+    while(--time);
+    GPIO_write(D10, 1);
+    
+    // testing if the delay is needed so tx fifo doesnt fill up.
+    // or if even just two bytes will break the DR to Tx FIFO thing.
+    spi1_init();
+    uint8_t tx_data[4] = {0xAB, 0xCD, 0xEF, 0x01};
+    spi_transmit(SPI1, tx_data, 2);
+    
+    return 0;
+}
+
+
 int _write(int file, char *data, int len) {
-    serial_write(USART2, data, len);
+    usart_transmit(USART2, data, len);
     return len;
 }

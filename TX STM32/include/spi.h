@@ -12,25 +12,23 @@
 /**
  * @brief Initializes the SPI peripheral.
  */
-void SPI1_init(void);
-
+void spi1_init(void);
 /**
  * @brief Sends data from TX FIFO to peripheral.
  * @param data Pointer to data to be sent.
  * @param size Number of bytes to send.
  */
-void SPI1_transmit(const uint8_t *data, uint8_t size);
-
+void spi_transmit(SPI_TypeDef *SPIx, const uint8_t *data, unsigned int size);
 /**
  * @brief Saves data from RX FIFO into a buffer.
  * @param data Pointer to where data is saved.
  * @param size Number of bytes to save.
  */
-void SPI1_receive(uint8_t *data, uint8_t size);
-
+void spi_receive(SPI_TypeDef *SPIx, uint8_t *data, unsigned int size);
 /**
  * @brief Flushes the RX FIFO.
  */
-void SPI1_flush_rx(void);
+void spi_flush_rx(SPI_TypeDef *SPIx);
+
 
 #endif

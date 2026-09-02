@@ -1,10 +1,3 @@
-/**
- * Author: Daniel Yeo
- * Date: 7/17/2026
- * File: nrf.h
- * Desc: Header file for the nRF24L01+ module. 
- */
-
 #ifndef NRF_H_
 #define NRF_H_
 
@@ -54,27 +47,25 @@
 #define STATUS_TX_DS   (1U << 5)
 #define STATUS_RX_DR   (1U << 6)
 
-
 /**
  * @brief Configures the nRF24L01 radio settings and sets its operational mode.
  * @param address Pointer to the 5-byte RX or TX address.
  * @param channel The RF frequency channel (0 to 124).
- * @param tx_mode 1 to initialize as a trasmitter, 0 to initialize as a receiver.
+ * @param tx_mode 1 to initialize as a transmitter, 0 to initialize as a receiver.
  */
 void nRF24_init(const uint8_t *address, uint8_t channel, bool tx_mode);
-
 /**
  * @brief Writes a 2-byte payload to the TX FIFO and transmit it.
  * @param data Pointer to the 2-byte data to send.
  * @return 1 if transmission succeeded (TX_DS flagged).
  */
 bool nRF24_transmit(const uint8_t *data);
-
 /**
  * @brief Checks the status register and extracts a 2-byte payload if available.
  * @param data Pointer to a 2-byte buffer where received data will be saved.
  * @return 1 if data was successfully read from Pipe 1, 0 if no data available.
  */
 bool nRF24_receive(uint8_t *data);
+
 
 #endif

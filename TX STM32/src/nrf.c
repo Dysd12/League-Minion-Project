@@ -4,16 +4,15 @@
  * File: nrf.c
  * Desc: Implementation file for the nRF24L01+ module. 
  */
-
 #include <stm32l432xx.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include "nrf.h"
-#include "delay.h"
 #include "spi.h"
 #include "gpio.h"
+#include "delay.h"
 
 static void nRF24_set_ce(bool ce) {
     GPIO_write(nRF24_CE, ce);
@@ -104,7 +103,7 @@ static void nRF24_print_registers(bool tx_mode) {
 
 void nRF24_init(const uint8_t *address, uint8_t channel, bool tx_mode) {
     // Initialize Nucleo pins connected to nRF24L01+ module
-    delay_ms(100);
+    //delay_ms(100);
     GPIO_config_output(nRF24_CE, 0, 0);
     GPIO_config_output(nRF24_CSN, 0, 0);
     nRF24_set_ce(0);
