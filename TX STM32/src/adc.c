@@ -47,7 +47,7 @@ void adc_config_single(Nucleo_pin pin)
 
     // If the ADC is off, turn it on before continuing!
     if (!(RCC->AHB2ENR & RCC_AHB2ENR_ADCEN) || ADC1->CR & ADC_CR_DEEPPWD) {
-        adc_init();
+        adc1_init();
     }
     // Configure GPIO pin for analog input
     gpio_config_analog(pin, 0);

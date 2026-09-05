@@ -14,36 +14,47 @@
 #include "gpio.h"
 #include "delay.h"
 
-static void nRF24_set_ce(bool ce) {
-    GPIO_write(nRF24_CE, ce);
+static void nRF24_set_ce(bool ce) 
+{
+    gpio_write(nRF24_CE, ce);
 }
 
-static void nRF24_set_csn(bool csn) {
-    GPIO_write(nRF24_CSN, csn);
+static void nRF24_set_csn(bool csn) 
+{
+    gpio_write(nRF24_CSN, csn);
 }
 
-static void nRF24_write(uint8_t cmd, const uint8_t *data, uint8_t size) {
+static void nRF24_write(uint8_t cmd, const uint8_t *data, uint8_t size) 
+{
+    nRF24_set_csn(0);
+
     cmd |= 0x20;
-    nRF24_set_csn(0);
-    SPI1_transmit(&cmd, 1);
-    SPI1_transmit(data, size);
-    delay_ms(1); // Need delay to ensure the nRF24 has time to process the command
+    spi_transmit(SPI1, &cmd, 1);
+    spi_transmit(SPI1, data, size);
+
+    for (volatile int delay = 0; delay < 200; delay++);
     nRF24_set_csn(1);
 }
 
-static void nRF24_read(uint8_t cmd, uint8_t *data, uint8_t size) {
+static void nRF24_read(uint8_t cmd, uint8_t *data, uint8_t size) 
+{
     nRF24_set_csn(0);
-    SPI1_transmit(&cmd, 1);
-    SPI1_flush_rx();
-    SPI1_receive(data, size);
-    delay_ms(1); // Need delay to ensure the nRF24 has time to process the command
+
+    spi_transmit(SPI1, &cmd, 1);
+    spi_flush_rx(SPI1);
+    spi_receive(SPI1, data, size);
+
+    for (volatile int delay = 0; delay < 200; delay++);
     nRF24_set_csn(1);
 }
 
-static void nRF24_cmd(uint8_t cmd) {
+static void nRF24_cmd(uint8_t cmd) 
+{
     nRF24_set_csn(0);
-    SPI1_transmit(&cmd, 1);
-    delay_ms(1);
+
+    spi_transmit(SPI1, &cmd, 1);
+
+    for (volatile int delay = 0; delay < 200; delay++);
     nRF24_set_csn(1);
 }
 
@@ -60,7 +71,7 @@ static void nRF24_print_registers(bool tx_mode) {
     nRF24_read(EN_AA, &val, 1);
     printf("nRF24 EN_AA:       0x%02X\n", val);
     nRF24_read(EN_RXADDR, &val, 1);
-    printf("nRF24 EN_RXADDR:  0x%02X\n", val);
+    printf("nRF24 EN_RXADDR:   0x%02X\n", val);
     nRF24_read(SETUP_AW, &val, 1);
     printf("nRF24 SETUP_AW:    0x%02X\n", val);
     nRF24_read(SETUP_RETR, &val, 1);
@@ -102,24 +113,25 @@ static void nRF24_print_registers(bool tx_mode) {
 }
 
 void nRF24_init(const uint8_t *address, uint8_t channel, bool tx_mode) {
-    // Initialize Nucleo pins connected to nRF24L01+ module
-    //delay_ms(100);
-    GPIO_config_output(nRF24_CE, 0, 0);
-    GPIO_config_output(nRF24_CSN, 0, 0);
+    /* Initialize Nucleo pins connected to nRF24L01+ module */
+    gpio_config_output(nRF24_CE, 0, 0);
+    gpio_config_output(nRF24_CSN, 0, 0);
     nRF24_set_ce(0);
     nRF24_set_csn(1);
 
-    // Reset Status & Flush Buffers
+    /* Reset Status & Flush Buffers */
     nRF24_cmd(FLUSH_TX); // Clears the TX buffer, can hold 3 packets (in this case a packet holds 2 bytes)
     nRF24_cmd(FLUSH_RX);
     nRF24_write(STATUS, (uint8_t[]){0x70}, 1); // Clear interrupts, Write 1 to clear
-    // TX RX Common Configs
+
+    /* Tx/Rx Common Configurations */
     nRF24_write(EN_AA,     (uint8_t[]){0x00}, 1); // Disable Auto-ACK
     nRF24_write(SETUP_AW,  (uint8_t[]){0x03}, 1); // 5-byte address width
     nRF24_write(SETUP_RETR,(uint8_t[]){0x00}, 1); // No retransmissions
     nRF24_write(RF_CH,     &channel,          1);
     nRF24_write(RF_SETUP,  (uint8_t[]){0x0E}, 1); // 2Mbps, 0dBm
-    // Per TX RX Configs
+
+    /* Tx/Rx Mode Configurations */
     if (tx_mode) {
         nRF24_write(CONFIG,     (uint8_t[]){0x0E}, 1); // TX Mode, Power Up
         nRF24_write(TX_ADDR,    address,           5); // Set TX Target Address
@@ -133,12 +145,12 @@ void nRF24_init(const uint8_t *address, uint8_t channel, bool tx_mode) {
     nRF24_print_registers(tx_mode);
 }
 
-bool nRF24_transmit(const uint8_t *data) {
+bool nRF24_transmit(const uint8_t *data) 
+{
     // Write data to TX FIFO
     nRF24_write(W_TX_PAYLOAD, data, 2);
 
     nRF24_set_ce(1); // Flash CE to transmit package
-    //delay_us(10);
     nRF24_set_ce(0);
 
     uint8_t status_reg = 0;
@@ -152,15 +164,16 @@ bool nRF24_transmit(const uint8_t *data) {
     return 0;
 }
 
-bool nRF24_receive(uint8_t *data) {
+bool nRF24_receive(uint8_t *data) 
+{
     // Check if data is available in RX FIFO
     uint8_t status_reg = 0;
     nRF24_read(STATUS, &status_reg, 1);
 
     if (status_reg & STATUS_RX_DR) {
         nRF24_read(R_RX_PAYLOAD, data, 2); // Read data
-        nRF24_write(STATUS, (uint8_t[]){STATUS_RX_DR}, 1); // Clear flag
         nRF24_cmd(FLUSH_RX); // Clear RX FIFO, get rid of new data the MCU didn't have time to process
+        nRF24_write(STATUS, (uint8_t[]){STATUS_RX_DR}, 1); // Clear flag
         return 1;
     }
     return 0;

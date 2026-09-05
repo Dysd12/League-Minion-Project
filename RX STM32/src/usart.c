@@ -14,7 +14,8 @@
  * 16x Rx Oversampling
  * Tx & Rx Enabled
  */
-void usart2_init(unsigned int baud) {
+void usart2_init(unsigned int baud) 
+{
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
     GPIOA->MODER &= ~((0x3 << 2*2) | (0x3 << 2*15));
     GPIOA->MODER |= (0x2 << 2*2) | (0x2 << 2*15); // AF mode for PA2 & PA15
