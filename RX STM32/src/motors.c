@@ -5,15 +5,15 @@
 
 void motors_init() {
     // Configure motor control pins as outputs
-    GPIO_config_output(APHASE, 0, 0); // Motor A phase pin
-    GPIO_config_alternate_function(AENABLE, 1); // Motor A enable pin
-    GPIO_config_output(BPHASE, 0, 0); // Motor B phase pin
-    GPIO_config_alternate_function(BENABLE, 1); // Motor B enable pin
+    gpio_config_output(APHASE, 0, 0); // Motor A phase pin
+    gpio_config_alternate_function(AENABLE, 1); // Motor A enable pin
+    gpio_config_output(BPHASE, 0, 0); // Motor B phase pin
+    gpio_config_alternate_function(BENABLE, 1); // Motor B enable pin
 }
 
 void set_motor_pwm(int drive_velocity, int turn_velocity) {
     // Calculate motor speeds based on drive and turn speeds
-    int left_motor_speed  = drive_velocity + turn_velocity;
+    int left_motor_speed = drive_velocity + turn_velocity;
     int right_motor_speed = drive_velocity - turn_velocity;
 
     // Reducing small values to zero to prevent jitter
@@ -25,24 +25,24 @@ void set_motor_pwm(int drive_velocity, int turn_velocity) {
     }
     
     // Scaling motor speeds to a PWM percentage (0-100)
-    int left_motor_pwm  = (left_motor_speed  * 100) / 240;
+    int left_motor_pwm = (left_motor_speed  * 100) / 240;
     int right_motor_pwm = (right_motor_speed * 100) / 240;
 
     // Left Motor (B)
     if (left_motor_speed > 0) {
-        GPIO_write(BPHASE, 1);
-        TIM1_config_pwm(BENABLE, left_motor_pwm);    
+        gpio_write(BPHASE, 1);
+        tim1_config_pwm(BENABLE, left_motor_pwm);    
     } else {
-        GPIO_write(BPHASE, 0);
-        TIM1_config_pwm(BENABLE, -left_motor_pwm);
+        gpio_write(BPHASE, 0);
+        tim1_config_pwm(BENABLE, -left_motor_pwm);
     }
 
     // Right Motor (A)
     if (right_motor_speed > 0) {
-        GPIO_write(APHASE, 1);
-        TIM1_config_pwm(AENABLE, right_motor_pwm);
+        gpio_write(APHASE, 1);
+        tim1_config_pwm(AENABLE, right_motor_pwm);
     } else {
-        GPIO_write(APHASE, 0);
-        TIM1_config_pwm(AENABLE, -right_motor_pwm);
+        gpio_write(APHASE, 0);
+        tim1_config_pwm(AENABLE, -right_motor_pwm);
     }
 }

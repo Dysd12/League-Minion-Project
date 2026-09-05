@@ -4,7 +4,7 @@
 
 
 // Mapping of GPIO pin to timer channel
-const static int get_TIM1_channel[24] = {
+const static int get_tim1_channel[24] = {
     0,  0,  0,  0,  // PA0,  PA1,  PA2,  PA3,
     0,  0,  0, -1,  // PA4,  PA5,  PA6,  PA7,
     1,  2,  3,  4,  // PA8,  PA9,  PA10, PA11,
@@ -15,7 +15,7 @@ const static int get_TIM1_channel[24] = {
 
 uint32_t freq_clk_psc = 4000000;
 
-void TIM1_init(uint32_t freq_hz) {
+void tim1_init(uint32_t freq_hz) {
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
 
     if (freq_hz > freq_clk_psc) {
@@ -35,8 +35,8 @@ void TIM1_init(uint32_t freq_hz) {
     TIM1->CR1  |= TIM_CR1_CEN;
 }
 
-bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
-    int channel = get_TIM1_channel[pin];
+bool tim_config_pwm(TIM_TypeDef *TIMx, Nucleo_pin pin, unsigned int duty_cycle) {
+    int channel = get_tim1_channel[pin];
     if (channel < 1 || channel > 4) {
         return false;
     }
@@ -126,7 +126,7 @@ bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle) {
     else if (channel == 3) TIM1->CCR3 = ccr_val;
     else if (channel == 4) TIM1->CCR4 = ccr_val;
 
-    GPIO_config_alternate_function(pin, 1);
+    gpio_config_alternate_function(pin, 1);
 
     return true;
 }

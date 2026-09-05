@@ -1,3 +1,7 @@
+/**
+ * Daniel Yeo
+ * 2026/9/2
+ */
 #include <stm32l432xx.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,15 +17,15 @@
 
 int main() {
     uint8_t address[5] = {0xEE, 0xDD, 0xCC, 0xBB, 0xAA}; // LSB written first
-    uint8_t channel    = 10;
+    uint8_t channel = 10;
     uint8_t rx_data[2] = {0};
-    int motor_data[2]  = {0};
+    int motor_data[2] = {0};
 
-    host_serial_init();
+    usart2_init(9600);
     delay_init();
-    SPI1_init();
+    spi1_init();
 	nRF24_init(address, channel, 0);
-    TIM1_init(1000); // 1 kHz PWM frequency
+    tim1_init(1000); // 1 kHz PWM frequency
     motors_init();
     
     while(1) {

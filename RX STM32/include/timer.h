@@ -7,8 +7,8 @@
 #include "gpio.h"
 
 
-void TIM1_init(uint32_t freq_Hz);
-bool TIM1_config_pwm(Nucleo_pin pin, unsigned int duty_cycle);
+void tim1_init(uint32_t freq_Hz);
+bool tim_config_pwm(TIM_TypeDef *TIMx, Nucleo_pin pin, unsigned int duty_cycle);
+
 
 #endif
-
